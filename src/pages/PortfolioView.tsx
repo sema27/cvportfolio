@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import type { PortfolioData } from '../types/portfolio'
-import { loadPortfolioFromStorage } from '../types/portfolio'
+import { loadPortfolioFromStorage, savePortfolioToStorage } from '../types/portfolio'
+import { parsePortfolioFromShareUrl } from '../utils/portfolioShare'
 
 function formatDateRange(start: string, end: string, current: boolean): string {
   if (!start && !end) return ''
@@ -26,12 +27,23 @@ const NAV_ITEMS = [
 ] as const
 
 export function PortfolioView() {
+  const { search } = useLocation()
   const [data, setData] = useState<PortfolioData | null>(null)
   const [navOpen, setNavOpen] = useState(false)
+  const [loadedFromLink, setLoadedFromLink] = useState(false)
 
   useEffect(() => {
+    const fromLink = parsePortfolioFromShareUrl(search)
+    if (fromLink) {
+      setData(fromLink)
+      savePortfolioToStorage(fromLink)
+      setLoadedFromLink(true)
+      return
+    }
+
+    setLoadedFromLink(false)
     setData(loadPortfolioFromStorage())
-  }, [])
+  }, [search])
 
   const closeNav = () => setNavOpen(false)
 
@@ -123,6 +135,11 @@ export function PortfolioView() {
         <div className="absolute top-0 right-0 w-[70%] sm:w-[50%] h-[60%] bg-gradient-to-bl from-amber-100/40 to-transparent rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-[50%] h-[40%] bg-gradient-to-tr from-orange-100/30 to-transparent rounded-full blur-3xl pointer-events-none" />
         <div className="relative max-w-3xl mx-auto text-center">
+          {loadedFromLink && (
+            <p className="inline-flex items-center gap-2 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-full mb-5">
+              Paylaşım linkinden yüklendi
+            </p>
+          )}
           <p className="font-display text-amber-600 font-medium text-base sm:text-lg mb-3 sm:mb-4 tracking-wide">Merhaba!</p>
           <h1 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-slate-900 tracking-tight leading-[1.15]">
             {personal.fullName || 'Adınız'}

@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef, type ChangeEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import type { PortfolioData } from '../types/portfolio'
 import {
@@ -6,6 +6,11 @@ import {
   loadPortfolioFromStorage,
   savePortfolioToStorage,
 } from '../types/portfolio'
+import {
+  createShareUrl,
+  downloadPortfolioJson,
+  parsePortfolioJsonFile,
+} from '../utils/portfolioShare'
 import { PortfolioPersonalForm } from '../components/portfolio/PortfolioPersonalForm'
 import { PortfolioAboutForm } from '../components/portfolio/PortfolioAboutForm'
 import { PortfolioSkillsForm } from '../components/portfolio/PortfolioSkillsForm'
@@ -15,6 +20,8 @@ import { PortfolioExperienceForm } from '../components/portfolio/PortfolioExperi
 export function Portfolio() {
   const navigate = useNavigate()
   const [data, setData] = useState<PortfolioData>(() => loadPortfolioFromStorage() ?? getInitialPortfolioData())
+  const [actionMessage, setActionMessage] = useState<string>('')
+  const importInputRef = useRef<HTMLInputElement | null>(null)
 
   useEffect(() => {
     savePortfolioToStorage(data)
@@ -43,6 +50,42 @@ export function Portfolio() {
   const handleViewPortfolio = () => {
     savePortfolioToStorage(data)
     navigate('/portfolio/view')
+  }
+
+  const handleExportJson = () => {
+    downloadPortfolioJson(data)
+    setActionMessage('Portfolio JSON dosyası indirildi.')
+  }
+
+  const handleCopyShareLink = async () => {
+    const shareUrl = createShareUrl(data)
+    try {
+      await navigator.clipboard.writeText(shareUrl)
+      setActionMessage('Paylaşım linki panoya kopyalandı.')
+    } catch (_) {
+      window.prompt('Linki kopyalayın:', shareUrl)
+      setActionMessage('Paylaşım linki oluşturuldu.')
+    }
+  }
+
+  const handleOpenImport = () => {
+    importInputRef.current?.click()
+  }
+
+  const handleImportFile = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    try {
+      const imported = await parsePortfolioJsonFile(file)
+      setData(imported)
+      savePortfolioToStorage(imported)
+      setActionMessage('Portfolio JSON dosyası başarıyla yüklendi.')
+    } catch (_) {
+      setActionMessage('Dosya okunamadı. Geçerli bir portfolio JSON dosyası seçin.')
+    } finally {
+      event.target.value = ''
+    }
   }
 
   const handleResetPortfolio = () => {
@@ -134,6 +177,34 @@ export function Portfolio() {
             </div>
           </div>
           <div className="flex items-center gap-3">
+            <input
+              ref={importInputRef}
+              type="file"
+              accept="application/json,.json"
+              onChange={handleImportFile}
+              className="hidden"
+            />
+            <button
+              type="button"
+              onClick={handleExportJson}
+              className="bg-slate-700 hover:bg-slate-600 text-slate-200 font-medium px-3 py-2 rounded-xl text-sm transition-colors border border-slate-600"
+            >
+              JSON İndir
+            </button>
+            <button
+              type="button"
+              onClick={handleOpenImport}
+              className="bg-slate-700 hover:bg-slate-600 text-slate-200 font-medium px-3 py-2 rounded-xl text-sm transition-colors border border-slate-600"
+            >
+              JSON Yükle
+            </button>
+            <button
+              type="button"
+              onClick={handleCopyShareLink}
+              className="bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-3 py-2 rounded-xl text-sm transition-colors"
+            >
+              Link Kopyala
+            </button>
             <button
               type="button"
               onClick={handleResetPortfolio}
@@ -157,6 +228,13 @@ export function Portfolio() {
             </button>
           </div>
         </div>
+        {actionMessage && (
+          <div className="max-w-[1600px] mx-auto px-4 pb-3">
+            <p className="text-xs text-emerald-300/90 bg-emerald-500/10 border border-emerald-400/30 px-3 py-2 rounded-xl inline-block">
+              {actionMessage}
+            </p>
+          </div>
+        )}
       </header>
 
       <main className="relative z-10 flex-1 overflow-hidden pt-6 md:pt-8">
