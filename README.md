@@ -12,6 +12,13 @@ Resume Maker Pro tarzında, form doldurup canlı önizleme ile CV oluşturup PDF
 - **İki şablon**: Modern (koyu başlık) ve Klasik (sade)
 - **PDF indir**: Önizlemeyi A4 PDF olarak indirme
 
+### Portfolio (Yeni)
+
+- **Link kopyala**: Doldurulan portfolio verisini URL içine ekleyip paylaşılabilir bağlantı üretir.
+- **JSON indir**: Portfolio verisini `.json` dosyası olarak dışa aktarır (yedekleme/taşıma).
+- **JSON yükle**: Daha önce indirilen `.json` dosyasını içe aktarır.
+- **Linkten açma**: Paylaşım linki açıldığında portfolio verisi otomatik yüklenir.
+
 ## Çalıştırma
 
 ```bash
