@@ -34,3 +34,5 @@ npm run preview   # dist ile önizleme
 - Vite
 - Tailwind CSS
 - jsPDF + html2canvas (PDF export)
+
+<img width="1919" height="945" alt="image" src="https://github.com/user-attachments/assets/dfe2e320-2d54-4e68-812b-2acaab39d979" />
